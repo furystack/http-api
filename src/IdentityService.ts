@@ -2,8 +2,9 @@ import { IPhysicalStore, IUser, visitorUser } from "@furystack/core";
 import { IncomingMessage, ServerResponse } from "http";
 import { v1 } from "uuid";
 
-export class IdentityService<TUser extends IUser & {Password: string} = IUser & {Password: string}> {
+export type ILoginUser<T extends IUser> = T & { Password: string };
 
+export class IdentityService<TUser extends ILoginUser<IUser> = ILoginUser<IUser>> {
     public readonly sessions: Map<string, number> = new Map();
 
     private hashPassword(password: string): string {
@@ -49,7 +50,7 @@ export class IdentityService<TUser extends IUser & {Password: string} = IUser & 
         const sessionId = this.getSessionIdFromRequest(req);
         if (sessionId && this.sessions.has(sessionId)) {
             const userId = this.sessions.get(sessionId);
-            return this.users.get(userId as any) || visitorUser as TUser;
+            return await this.users.get(userId as any) || visitorUser as TUser;
         }
 
         return visitorUser as TUser;

@@ -1,8 +1,11 @@
-import { IContext, IUser, visitorUser } from "@furystack/core";
+import { IContext, IEntityStore, IUser, visitorUser } from "@furystack/core";
 import { IncomingMessage, ServerResponse } from "http";
-import { IdentityService } from "./IdentityService";
+import { IdentityService, ILoginUser } from "./IdentityService";
 
 export class RequestContext implements IContext {
+
+    public getEntityStore: <T>(type: new (...args: any[]) => T) => IEntityStore<T> | undefined = () => undefined;
+    public Entities: any;
     public async isAuthenticated(): Promise<boolean> {
         const currentUser = await this.getCurrentUser();
         return currentUser !== visitorUser;
@@ -27,14 +30,9 @@ export class RequestContext implements IContext {
         return currentUser;
     }
 
-    // ToDo
-    public getEntityStore() {
-        return null as any;
-    }
-
     constructor(
         public readonly incomingMessage: IncomingMessage,
         public readonly serverResponse: ServerResponse,
-        public readonly identityService: IdentityService,
+        public readonly identityService: IdentityService<ILoginUser<IUser>>,
     ) { }
 }
