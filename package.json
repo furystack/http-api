@@ -26,11 +26,11 @@
     "url": "https://github.com/furystack/core.git"
   },
   "keywords": [
-    "sensenet",
-    "ecm",
-    "content management",
-    "content query",
-    "lucene"
+    "FuryStack",
+    "HTTP",
+    "REST",
+    "API",
+    "Actions"
   ],
   "publishConfig": {
     "access": "public"
