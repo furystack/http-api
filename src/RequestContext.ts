@@ -1,8 +1,10 @@
 import { IContext, IEntityStore, IUser, visitorUser } from "@furystack/core";
+import { Injector } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
 import { IdentityService, ILoginUser } from "./IdentityService";
 
 export class RequestContext implements IContext {
+    public getInjector = () => this.injector;
 
     public getEntityStore: <T>(type: new (...args: any[]) => T) => IEntityStore<T> | undefined = () => undefined;
     public Entities: any;
@@ -34,5 +36,6 @@ export class RequestContext implements IContext {
         public readonly incomingMessage: IncomingMessage,
         public readonly serverResponse: ServerResponse,
         public readonly identityService: IdentityService<ILoginUser<IUser>>,
+        private readonly injector = new Injector(),
     ) { }
 }
