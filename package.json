@@ -1,6 +1,6 @@
 {
   "name": "@furystack/http-api",
-  "version": "0.1.8",
+  "version": "0.2.8",
   "description": "HTTP Api FuryStack package",
   "main": "dist/index.js",
   "files": [
@@ -67,7 +67,7 @@
     "@types/uuid": "^3.4.4",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
-    "nyc": "^13.0.1",
+    "nyc": "^13.1.0",
     "rimraf": "^2.6.1",
     "tslint": "^5.11.0",
     "typescript": "^3.1.3"
