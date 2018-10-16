@@ -1,7 +1,7 @@
 import { IContext, IEntityStore, IUser, visitorUser } from "@furystack/core";
 import { Injector } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
-import { IdentityService, ILoginUser } from "./IdentityService";
+import { IdentityService } from "./IdentityService";
 
 export class RequestContext implements IContext {
     public getInjector = () => this.injector;
@@ -35,7 +35,7 @@ export class RequestContext implements IContext {
     constructor(
         public readonly incomingMessage: IncomingMessage,
         public readonly serverResponse: ServerResponse,
-        public readonly identityService: IdentityService<ILoginUser<IUser>>,
+        public readonly identityService: IdentityService<IUser>,
         private readonly injector = new Injector(),
     ) { }
 }

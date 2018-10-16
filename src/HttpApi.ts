@@ -38,7 +38,7 @@ export const defaultHttpApiConfiguration: IHttpApiConfiguration = {
 export class HttpApi implements IApi<RequestContext> {
     public injector = new Injector();
     public loggers: LoggerCollection = new LoggerCollection();
-    public contextFactory(incomingMessage: IncomingMessage, serverResponse: ServerResponse, identityService: IdentityService<ILoginUser<IUser>>) {
+    public contextFactory(incomingMessage: IncomingMessage, serverResponse: ServerResponse, identityService: IdentityService<IUser>) {
         return new RequestContext(incomingMessage, serverResponse, identityService);
     }
 

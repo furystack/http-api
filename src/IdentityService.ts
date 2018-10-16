@@ -6,20 +6,20 @@ import { v1 } from "uuid";
 import { IExternalLoginService } from "./Models";
 export type ILoginUser<T extends IUser> = T & { Password: string };
 
-export interface IIdentityServiceOptions<TUser> {
-    users: IPhysicalStore<TUser>;
+export interface IIdentityServiceOptions<TUser extends IUser> {
+    users: IPhysicalStore<ILoginUser<TUser>>;
     cookieName: string;
     hashMethod: (plain: string) => string;
     injector: Injector;
 }
 
-export class IdentityService<TUser extends ILoginUser<IUser> = ILoginUser<IUser>> {
+export class IdentityService<TUser extends IUser = IUser> {
     public readonly sessions: Map<string, number> = new Map();
     public async authenticateUser(userName: string, password: string): Promise<TUser> {
         const match = await this.options.users.filter({
             Username: userName,
             Password: this.options.hashMethod(password),
-        } as Partial<TUser>);
+        } as Partial<ILoginUser<TUser>>);
         if (match.length === 1) {
             return match[0];
         }
