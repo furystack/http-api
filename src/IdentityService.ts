@@ -1,4 +1,4 @@
-import { Constructable, InMemoryStore, IPhysicalStore, IUser, visitorUser } from "@furystack/core";
+import { Constructable, InMemoryStore, IPhysicalStore, IUser, LoggerCollection, visitorUser } from "@furystack/core";
 import { Injector } from "@furystack/inject";
 import { sha256 } from "hash.js";
 import { IncomingMessage, ServerResponse } from "http";
@@ -71,8 +71,19 @@ export class IdentityService<TUser extends IUser = IUser> {
     }
 
     public async externalLogin<T extends IExternalLoginService<TUser, TArgs>, TArgs extends any[]>(service: Constructable<T>, ...args: TArgs): Promise<TUser> {
-        const instance = Injector.Default.GetInstance(service);
-        return await instance.login(this, ...args);
+        try {
+            const instance = this.options.injector.GetInstance(service);
+            const user = await instance.login(this, ...args);
+            if (user.Id !== visitorUser.Id) {
+                const sessionId = v1();
+                this.sessions.set(sessionId, user.Id);
+                return user;
+            }
+        } catch (error) {
+            /** */
+            this.options.injector.GetInstance(LoggerCollection).error("IdentityService",  `Error during external login with '${service.name}': ${error.message}`, error);
+        }
+        return visitorUser as TUser;
     }
 
     public async cookieLogout(req: IncomingMessage, serverResponse: ServerResponse) {
