@@ -70,13 +70,14 @@ export class IdentityService<TUser extends IUser = IUser> {
         return user;
     }
 
-    public async externalLogin<T extends IExternalLoginService<TUser, TArgs>, TArgs extends any[]>(service: Constructable<T>, ...args: TArgs): Promise<TUser> {
+    public async externalLogin<T extends IExternalLoginService<TUser, TArgs>, TArgs extends any[]>(service: Constructable<T>, serverResponse: ServerResponse, ...args: TArgs): Promise<TUser> {
         try {
             const instance = this.options.injector.GetInstance(service);
             const user = await instance.login(this, ...args);
             if (user.Id !== visitorUser.Id) {
                 const sessionId = v1();
                 this.sessions.set(sessionId, user.Id);
+                serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=${sessionId}; Path=/; Secure; HttpOnly`);
                 return user;
             }
         } catch (error) {
@@ -90,7 +91,7 @@ export class IdentityService<TUser extends IUser = IUser> {
         const sessionId = this.getSessionIdFromRequest(req);
         if (sessionId) {
             this.sessions.delete(sessionId);
-            serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=; HttpOnly`);
+            serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=; Path=/; Secure; HttpOnly`);
         }
     }
 
