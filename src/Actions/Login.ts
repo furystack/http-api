@@ -1,4 +1,4 @@
-import { IContext } from "@furystack/core";
+import { IContext, SystemRoles } from "@furystack/core";
 import { IncomingMessage, ServerResponse } from "http";
 import { Authorize } from "../ActionDecorators/Authorize";
 import { Method } from "../ActionDecorators/Method";
@@ -8,7 +8,7 @@ import { RequestAction } from "../RequestAction";
 import { Utils } from "../Utils";
 
 @Method("POST")
-@Authorize(IdentityClaims.IsVisitor)
+@Authorize(SystemRoles.Visitors)
 export class LoginAction extends RequestAction {
 
     public async exec(incomingMessage: IncomingMessage, response: ServerResponse, _getContext: () => IContext) {

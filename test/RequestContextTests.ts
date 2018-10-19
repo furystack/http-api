@@ -1,4 +1,4 @@
-import { IdentityClaims } from "@furystack/core";
+import { SystemRoles } from "@furystack/core";
 import { visitorUser } from "@furystack/core/dist/Models";
 import { expect } from "chai";
 import { IdentityService } from "../src/IdentityService";
@@ -17,12 +17,12 @@ export const requestContextTests = describe("RequestContext", () => {
     });
 
     it("IsAuthorized should return true for visitor by default", async () => {
-        const authorized = await r.isAuthorized(IdentityClaims.IsVisitor);
+        const authorized = await r.isAuthorized(SystemRoles.Visitors);
         expect(authorized).to.be.eq(true);
     });
 
     it("IsAuthorized should return false for not-applied claims", async () => {
-        const authorized = await r.isAuthorized("example-not-applied-claim-value");
+        const authorized = await r.isAuthorized({ Id: 666, Name: "Not-Authorized-Role" });
         expect(authorized).to.be.eq(false);
     });
 

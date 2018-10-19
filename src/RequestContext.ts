@@ -1,4 +1,4 @@
-import { IContext, IEntityStore, IUser, visitorUser } from "@furystack/core";
+import { IContext, IRole, IUser, visitorUser } from "@furystack/core";
 import { Injector } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
 import { IdentityService } from "./IdentityService";
@@ -6,16 +6,15 @@ import { IdentityService } from "./IdentityService";
 export class RequestContext implements IContext {
     public getInjector = () => this.injector;
 
-    public getEntityStore: <T>(type: new (...args: any[]) => T) => IEntityStore<T> | undefined = () => undefined;
     public Entities: any;
     public async isAuthenticated(): Promise<boolean> {
         const currentUser = await this.getCurrentUser();
         return currentUser !== visitorUser;
     }
-    public async isAuthorized(...claims: string[]): Promise<boolean> {
+    public async isAuthorized(...roles: IRole[]): Promise<boolean> {
         const currentUser = await this.getCurrentUser();
-        for (const claim of claims) {
-            if (!currentUser.Claims.some((c) => c === claim)) {
+        for (const role of roles) {
+            if (!currentUser.Roles.some((c) => c.Id === role.Id)) {
                 return false;
             }
         }
