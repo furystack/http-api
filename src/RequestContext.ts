@@ -35,6 +35,6 @@ export class RequestContext implements IContext {
         public readonly incomingMessage: IncomingMessage,
         public readonly serverResponse: ServerResponse,
         public readonly identityService: IdentityService<IUser>,
-        private readonly injector = new Injector(),
+        private readonly injector: Injector,
     ) { }
 }

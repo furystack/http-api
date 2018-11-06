@@ -10,6 +10,7 @@ import { NotFoundAction } from "./NotFoundAction";
 import { RootAction } from "./RootAction";
 
 export interface IHttpApiConfiguration {
+    injector: Injector;
     serverFactory: (requestListener: (incomingMessage: IncomingMessage, serverResponse: ServerResponse) => void) => Server;
     hostName: string;
     port: number;
@@ -23,6 +24,7 @@ export interface IHttpApiConfiguration {
 }
 
 export const defaultHttpApiConfiguration: IHttpApiConfiguration = {
+    injector: Injector.Default,
     defaultAction: new MetadataAction(),
     errorAction: new ErrorAction(),
     hostName: "localhost",
@@ -36,10 +38,10 @@ export const defaultHttpApiConfiguration: IHttpApiConfiguration = {
 };
 
 export class HttpApi implements IApi<RequestContext> {
-    public injector = new Injector();
+    public readonly injector: Injector;
     public loggers: LoggerCollection = new LoggerCollection();
     public contextFactory(incomingMessage: IncomingMessage, serverResponse: ServerResponse, identityService: IdentityService<IUser>) {
-        return new RequestContext(incomingMessage, serverResponse, identityService);
+        return new RequestContext(incomingMessage, serverResponse, identityService, this.injector);
     }
 
     private readonly rootAction: RequestAction;
@@ -99,5 +101,6 @@ export class HttpApi implements IApi<RequestContext> {
             default: this.options.defaultAction,
         });
         this.server = this.options.serverFactory(this.mainRequestListener.bind(this));
+        this.injector = this.options.injector;
     }
 }

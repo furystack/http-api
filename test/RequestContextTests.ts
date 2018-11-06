@@ -1,14 +1,19 @@
 import { SystemRoles } from "@furystack/core";
 import { visitorUser } from "@furystack/core/dist/Models";
+import { Injector } from "@furystack/inject";
 import { expect } from "chai";
 import { IdentityService } from "../src/IdentityService";
 import { RequestContext } from "../src/RequestContext";
 export const requestContextTests = describe("RequestContext", () => {
 
-    const r = new RequestContext({ headers: {} } as any, null as any, new IdentityService());
+    const r = new RequestContext({ headers: {} } as any, null as any, new IdentityService(), Injector.Default);
 
     it("should be constructed", () => {
         expect(r).to.be.instanceof(RequestContext);
+    });
+
+    it("getInjector() should return the provided injector", () => {
+        expect(r.getInjector()).to.be.eq(Injector.Default);
     });
 
     it("currentUser should return Visitor by default", async () => {
