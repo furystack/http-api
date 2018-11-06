@@ -14,6 +14,9 @@ export interface IIdentityServiceOptions<TUser extends IUser> {
 }
 
 export class IdentityService<TUser extends IUser = IUser> {
+
+    public static LogScope = "@furystack/http-api/IdentityService";
+
     public readonly sessions: Map<string, number> = new Map();
     public async authenticateUser(userName: string, password: string): Promise<TUser> {
         const match = await this.options.users.filter({
@@ -78,11 +81,23 @@ export class IdentityService<TUser extends IUser = IUser> {
                 const sessionId = v1();
                 this.sessions.set(sessionId, user.Id);
                 serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=${sessionId}; Path=/; Secure; HttpOnly`);
+                this.options.injector.GetInstance(LoggerCollection).Verbose({
+                    scope: IdentityService.LogScope,
+                    message: `User '${user.Username}' logged in with '${service.name}' external service.`,
+                    data: {
+                        user,
+                        sessionId,
+                    },
+                });
                 return user;
             }
         } catch (error) {
             /** */
-            this.options.injector.GetInstance(LoggerCollection).error("IdentityService",  `Error during external login with '${service.name}': ${error.message}`, error);
+            this.options.injector.GetInstance(LoggerCollection).Error({
+                scope: IdentityService.LogScope,
+                message: `Error during external login with '${service.name}': ${error.message}`,
+                data: {error},
+            });
         }
         return visitorUser as TUser;
     }
@@ -90,8 +105,17 @@ export class IdentityService<TUser extends IUser = IUser> {
     public async cookieLogout(req: IncomingMessage, serverResponse: ServerResponse) {
         const sessionId = this.getSessionIdFromRequest(req);
         if (sessionId) {
+            const user = await this.authenticateRequest(req);
             this.sessions.delete(sessionId);
             serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=; Path=/; Secure; HttpOnly`);
+            this.options.injector.GetInstance(LoggerCollection).Verbose({
+                scope: IdentityService.LogScope,
+                message: `User '${user.Username}' has been logged out.`,
+                data: {
+                    user,
+                    sessionId,
+                },
+            });
         }
     }
 

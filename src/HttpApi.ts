@@ -32,7 +32,7 @@ export const defaultHttpApiConfiguration: IHttpApiConfiguration = {
     rootActions: [],
     port: 8080,
     protocol: "http",
-    logScope: "HTTP_API",
+    logScope: "@furystack/http-api",
 };
 
 export class HttpApi implements IApi<RequestContext> {
@@ -58,9 +58,25 @@ export class HttpApi implements IApi<RequestContext> {
         const action = this.rootAction.resolve(pathSegments, incomingMessage, serverResponse);
         try {
             await action.exec(incomingMessage, serverResponse, contextFactoryCached);
-            this.loggers.trace(this.options.logScope, `Returned ${serverResponse.statusCode} from '${incomingMessage.url}'`);
+            this.loggers.Verbose({
+                scope: this.options.logScope,
+                message: `'${incomingMessage.url} => ${serverResponse.statusCode}'`,
+                data: {
+                    request: {
+                        url: incomingMessage.url,
+                        methor: incomingMessage.method,
+                    },
+                    response: {
+                        statusCode: serverResponse.statusCode,
+                    },
+                },
+            });
         } catch (error) {
-            this.loggers.error(this.options.logScope, error);
+            this.loggers.Verbose({
+                scope: this.options.logScope,
+                message: `Error while executing action '${action.constructor.name}'`,
+                data: {error},
+            });
             this.options.errorAction.returnError(incomingMessage, serverResponse, contextFactoryCached, error);
         }
     }
