@@ -1,6 +1,5 @@
 import { IContext } from "@furystack/core";
 import { IncomingMessage, ServerResponse } from "http";
-import { Authorize } from "./ActionDecorators/Authorize";
 import { IRequestAction } from "./Models/IRequestAction";
 import { RequestAction } from "./RequestAction";
 
