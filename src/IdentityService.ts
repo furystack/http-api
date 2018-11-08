@@ -69,6 +69,14 @@ export class IdentityService<TUser extends IUser = IUser> {
             const sessionId = v1();
             this.sessions.set(sessionId, user.Id);
             serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=${sessionId}; Path=/; Secure; HttpOnly`);
+            this.options.injector.GetInstance(LoggerCollection).Information({
+                scope: IdentityService.LogScope,
+                message: `User '${user.Username}' logged in.`,
+                data: {
+                    user,
+                    sessionId,
+                },
+            });
         }
         return user;
     }
@@ -81,7 +89,7 @@ export class IdentityService<TUser extends IUser = IUser> {
                 const sessionId = v1();
                 this.sessions.set(sessionId, user.Id);
                 serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=${sessionId}; Path=/; Secure; HttpOnly`);
-                this.options.injector.GetInstance(LoggerCollection).Verbose({
+                this.options.injector.GetInstance(LoggerCollection).Information({
                     scope: IdentityService.LogScope,
                     message: `User '${user.Username}' logged in with '${service.name}' external service.`,
                     data: {
@@ -96,7 +104,7 @@ export class IdentityService<TUser extends IUser = IUser> {
             this.options.injector.GetInstance(LoggerCollection).Error({
                 scope: IdentityService.LogScope,
                 message: `Error during external login with '${service.name}': ${error.message}`,
-                data: {error},
+                data: { error },
             });
         }
         return visitorUser as TUser;
@@ -108,7 +116,7 @@ export class IdentityService<TUser extends IUser = IUser> {
             const user = await this.authenticateRequest(req);
             this.sessions.delete(sessionId);
             serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=; Path=/; Secure; HttpOnly`);
-            this.options.injector.GetInstance(LoggerCollection).Verbose({
+            this.options.injector.GetInstance(LoggerCollection).Information({
                 scope: IdentityService.LogScope,
                 message: `User '${user.Username}' has been logged out.`,
                 data: {
