@@ -27,7 +27,7 @@ export const requestContextTests = describe("RequestContext", () => {
     });
 
     it("IsAuthorized should return false for not-applied claims", async () => {
-        const authorized = await r.isAuthorized({ Id: 666, Name: "Not-Authorized-Role" });
+        const authorized = await r.isAuthorized({ Name: "Not-Authorized-Role", DisplayName: "" });
         expect(authorized).to.be.eq(false);
     });
 
