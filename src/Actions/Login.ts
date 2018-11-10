@@ -1,32 +1,20 @@
-import { IContext, SystemRoles } from "@furystack/core";
 import { IncomingMessage, ServerResponse } from "http";
-import { Authorize } from "../ActionDecorators/Authorize";
-import { Method } from "../ActionDecorators/Method";
-import { IdentityClaims } from "../Claims";
 import { IdentityService } from "../IdentityService";
-import { RequestAction } from "../RequestAction";
+import { IRequestAction } from "../Models";
 import { Utils } from "../Utils";
 
-@Method("POST")
-@Authorize(SystemRoles.Visitors)
-export class LoginAction extends RequestAction {
+export class LoginAction implements IRequestAction {
+    public dispose() { /**  */}
 
-    public async exec(incomingMessage: IncomingMessage, response: ServerResponse, _getContext: () => IContext) {
-        const loginData = await Utils.readPostBody<{ username: string, password: string }>(incomingMessage);
-        const user = await this.identityService.cookieLogin(loginData.username, loginData.password, response);
-        response.writeHead(200, {
+    public async exec() {
+        const loginData = await Utils.readPostBody<{ username: string, password: string }>(this.incomingMessage);
+        const user = await this.identityService.cookieLogin(loginData.username, loginData.password, this.serverResponse);
+        this.serverResponse.writeHead(200, {
             "Content-Type": "application/json",
         });
-        response.write(JSON.stringify(user));
-        response.end();
+        this.serverResponse.write(JSON.stringify(user));
+        this.serverResponse.end();
     }
-    public segmentName: string = "login";
-
-    /**
-     *
-     */
-    constructor(private readonly identityService: IdentityService, ...childActions: RequestAction[]) {
-        super(...childActions);
-
+    constructor(private readonly identityService: IdentityService, private incomingMessage: IncomingMessage, private serverResponse: ServerResponse) {
     }
 }

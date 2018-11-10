@@ -1,4 +1,5 @@
-import { IncomingMessage } from "http";
+import { IncomingMessage, ServerResponse } from "http";
+import { ICorsOptions } from "./Models/ICorsOptions";
 
 export class Utils {
     public static async readPostBody<T>(incomingMessage: IncomingMessage): Promise<T> {
@@ -19,4 +20,15 @@ export class Utils {
         });
         return JSON.parse(body) as T;
     }
+
+    public static addCorsHeaders(incomingMessage: IncomingMessage, serverResponse: ServerResponse, options: ICorsOptions) {
+        if (
+            incomingMessage.headers &&
+            incomingMessage.headers.origin !== incomingMessage.headers.host
+            && options.origins.some((origin) => origin === incomingMessage.headers.origin)) {
+            serverResponse.setHeader("Access-Control-Allow-Origin", incomingMessage.headers.origin as string);
+            serverResponse.setHeader("Access-Control-Allow-Credentials", "true");
+        }
+    }
+
 }

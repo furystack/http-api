@@ -1,5 +1,5 @@
-import { Constructable, InMemoryStore, IPhysicalStore, IUser, LoggerCollection, visitorUser } from "@furystack/core";
-import { Injector } from "@furystack/inject";
+import { InMemoryStore, IPhysicalStore, IUser, LoggerCollection, visitorUser } from "@furystack/core";
+import { Constructable, Injector } from "@furystack/inject";
 import { sha256 } from "hash.js";
 import { IncomingMessage, ServerResponse } from "http";
 import { v1 } from "uuid";
@@ -8,6 +8,7 @@ export type ILoginUser<T extends IUser> = T & { Password: string };
 
 export interface IIdentityServiceOptions<TUser extends IUser> {
     users: IPhysicalStore<ILoginUser<TUser>>;
+    sessions: IPhysicalStore<{SessionId: string, Username: string}>;
     cookieName: string;
     hashMethod: (plain: string) => string;
     injector: Injector;
@@ -16,8 +17,6 @@ export interface IIdentityServiceOptions<TUser extends IUser> {
 export class IdentityService<TUser extends IUser = IUser> {
 
     public static LogScope = "@furystack/http-api/IdentityService";
-
-    public readonly sessions: Map<string, number> = new Map();
     public async authenticateUser(userName: string, password: string): Promise<TUser> {
         const match = await this.options.users.filter({
             Username: userName,
@@ -55,9 +54,9 @@ export class IdentityService<TUser extends IUser = IUser> {
 
         // Cookie auth
         const sessionId = this.getSessionIdFromRequest(req);
-        if (sessionId && this.sessions.has(sessionId)) {
-            const userId = this.sessions.get(sessionId);
-            return await this.options.users.get(userId as any) || visitorUser as TUser;
+        if (sessionId) {
+            const session = await this.options.sessions.get(sessionId);
+            return (session && await this.options.users.get(session.Username as any)) || visitorUser as TUser;
         }
 
         return visitorUser as TUser;
@@ -67,7 +66,7 @@ export class IdentityService<TUser extends IUser = IUser> {
         const user = await this.authenticateUser(username, password);
         if (user !== visitorUser) {
             const sessionId = v1();
-            this.sessions.set(sessionId, user.Id);
+            await this.options.sessions.update(sessionId, {SessionId: sessionId, Username: user.Username});
             serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=${sessionId}; Path=/; Secure; HttpOnly`);
             this.options.injector.GetInstance(LoggerCollection).Information({
                 scope: IdentityService.LogScope,
@@ -85,9 +84,9 @@ export class IdentityService<TUser extends IUser = IUser> {
         try {
             const instance = this.options.injector.GetInstance(service);
             const user = await instance.login(this, ...args);
-            if (user.Id !== visitorUser.Id) {
+            if (user.Username !== visitorUser.Username) {
                 const sessionId = v1();
-                this.sessions.set(sessionId, user.Id);
+                await this.options.sessions.update(sessionId, {SessionId: sessionId, Username: user.Username});
                 serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=${sessionId}; Path=/; Secure; HttpOnly`);
                 this.options.injector.GetInstance(LoggerCollection).Information({
                     scope: IdentityService.LogScope,
@@ -114,7 +113,7 @@ export class IdentityService<TUser extends IUser = IUser> {
         const sessionId = this.getSessionIdFromRequest(req);
         if (sessionId) {
             const user = await this.authenticateRequest(req);
-            this.sessions.delete(sessionId);
+            await this.options.sessions.remove(sessionId);
             serverResponse.setHeader("Set-Cookie", `${this.options.cookieName}=; Path=/; Secure; HttpOnly`);
             this.options.injector.GetInstance(LoggerCollection).Information({
                 scope: IdentityService.LogScope,
@@ -128,7 +127,8 @@ export class IdentityService<TUser extends IUser = IUser> {
     }
 
     public readonly options: IIdentityServiceOptions<TUser> = {
-        users: new InMemoryStore<ILoginUser<TUser>>("", "Id"),
+        users: new InMemoryStore<ILoginUser<TUser>>("Username"),
+        sessions: new InMemoryStore<{SessionId: string, Username: string}>("SessionId"),
         cookieName: "fss",
         hashMethod: (plain) => sha256().update(plain).digest("hex"),
         injector: Injector.Default,

@@ -1,6 +1,5 @@
 import { IUser } from "@furystack/core";
-import { ServerResponse } from "http";
-import { IdentityService, ILoginUser } from "..";
+import { IdentityService } from "..";
 
 /**
  * Interface for implementing an external login provider

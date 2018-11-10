@@ -1,31 +1,19 @@
-import { IContext, visitorUser } from "@furystack/core";
+import { Injector } from "@furystack/inject";
 import { expect } from "chai";
+import { IncomingMessage, ServerResponse } from "http";
+import { IdentityService } from "../../src";
 import { LoginAction } from "../../src/Actions/Login";
-import { IdentityService } from "../../src/IdentityService";
-
 export const loginActionTests = describe("LoginAction", () => {
-    it("should be constructed without parameters", () => {
-        const c = new LoginAction(new IdentityService());
-        expect(c).to.be.instanceof(LoginAction);
-    });
-
-    it("exec", async () => {
-        const c = new LoginAction({
-            cookieLogin: async () => visitorUser,
-        } as any);
-        await c.exec({
-            method: "POST",
-            on: (_event: string, callback: () => void) => {
-                callback();
-            },
-            read: () => '{"value": 1}',
-
-        } as any, {
-            writeHead: (no: number) => expect(no).to.be.eq(200),
-            write: () => undefined,
-            end: () => undefined,
-        } as any, () => ({
-            isAuthorized: async () => true,
-        } as Partial<IContext> as any));
+    /** */
+    it("exec", () => {
+        const testUser = {Name: "Userke"};
+        const i = new Injector({parent: undefined});
+        i.SetInstance({}, IdentityService);
+        i.SetInstance({}, IncomingMessage);
+        i.SetInstance({writeHead: () => (undefined), end: (result: string) => {
+            expect(result).to.be.eq(JSON.stringify(testUser));
+        }}, ServerResponse);
+        const c = i.GetInstance(LoginAction, true);
+        c.exec();
     });
 });

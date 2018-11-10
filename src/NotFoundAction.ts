@@ -1,17 +1,16 @@
-import { IContext } from "@furystack/core";
+import { Injectable } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
-import { Authorize } from "./ActionDecorators/Authorize";
-import { RequestAction } from "./RequestAction";
+import { IRequestAction } from "./Models";
 
-export class NotFoundAction extends RequestAction {
-    public async exec(incomingMessage: IncomingMessage, serverResponse: ServerResponse, _getContext: () => IContext): Promise<void> {
-        serverResponse.writeHead(404, "NOT FOUND :(");
-        serverResponse.write(JSON.stringify({ Error: "Content not found", url: incomingMessage.url }));
-        serverResponse.end();
+@Injectable()
+export class NotFoundAction implements IRequestAction {
+    public async dispose() { /**  */}
+    public async exec(): Promise<void> {
+        this.serverResponse.writeHead(404, "NOT FOUND :(");
+        this.serverResponse.write(JSON.stringify({ Error: "Content not found", url: this.incomingMessage.url }));
+        this.serverResponse.end();
     }
-    public segmentName: string = "";
 
-    constructor() {
-        super();
-    }
+    constructor(private incomingMessage: IncomingMessage, private serverResponse: ServerResponse) {  }
+
 }
