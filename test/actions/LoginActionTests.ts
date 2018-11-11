@@ -1,19 +1,24 @@
 import { Injector } from "@furystack/inject";
+import { usingAsync } from "@sensenet/client-utils";
 import { expect } from "chai";
 import { IncomingMessage, ServerResponse } from "http";
-import { IdentityService } from "../../src";
+import { IdentityService, Utils } from "../../src";
 import { LoginAction } from "../../src/Actions/Login";
 export const loginActionTests = describe("LoginAction", () => {
     /** */
-    it("exec", () => {
+    it("exec", (done: MochaDone) => {
         const testUser = {Name: "Userke"};
-        const i = new Injector({parent: undefined});
-        i.SetInstance({}, IdentityService);
-        i.SetInstance({}, IncomingMessage);
-        i.SetInstance({writeHead: () => (undefined), end: (result: string) => {
-            expect(result).to.be.eq(JSON.stringify(testUser));
-        }}, ServerResponse);
-        const c = i.GetInstance(LoginAction, true);
-        c.exec();
+        usingAsync(new Injector({parent: undefined}), async (i) => {
+            i.SetInstance({cookieLogin: async () => testUser}, IdentityService);
+            i.SetInstance({}, IncomingMessage);
+            i.SetInstance({readPostBody: async () => ({})}, Utils);
+            i.SetInstance({writeHead: () => (undefined), end: (result: string) => {
+                expect(result).to.be.eq(JSON.stringify(testUser));
+                done();
+            }}, ServerResponse);
+            await usingAsync(i.GetInstance(LoginAction, true), async (c) => {
+                await c.exec();
+            });
+        });
     });
 });

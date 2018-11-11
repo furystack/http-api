@@ -2,7 +2,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { ICorsOptions } from "./Models/ICorsOptions";
 
 export class Utils {
-    public static async readPostBody<T>(incomingMessage: IncomingMessage): Promise<T> {
+    public async readPostBody<T>(incomingMessage: IncomingMessage = this.incomingMessage): Promise<T> {
         let body = "";
         await new Promise((resolve, reject) => {
             incomingMessage.on("readable", () => {
@@ -21,7 +21,7 @@ export class Utils {
         return JSON.parse(body) as T;
     }
 
-    public static addCorsHeaders(incomingMessage: IncomingMessage, serverResponse: ServerResponse, options: ICorsOptions) {
+    public addCorsHeaders(options: ICorsOptions, incomingMessage: IncomingMessage = this.incomingMessage, serverResponse: ServerResponse = this.serverResponse) {
         if (
             incomingMessage.headers &&
             incomingMessage.headers.origin !== incomingMessage.headers.host
@@ -29,6 +29,10 @@ export class Utils {
             serverResponse.setHeader("Access-Control-Allow-Origin", incomingMessage.headers.origin as string);
             serverResponse.setHeader("Access-Control-Allow-Credentials", "true");
         }
+    }
+
+    constructor(private incomingMessage: IncomingMessage, private serverResponse: ServerResponse) {
+
     }
 
 }

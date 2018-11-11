@@ -1,6 +1,6 @@
 import { Injectable } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
-import { IRequestAction } from "./Models";
+import { IRequestAction } from "../Models";
 
 @Injectable()
 export class NotFoundAction implements IRequestAction {

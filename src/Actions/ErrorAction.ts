@@ -1,7 +1,7 @@
 import { LoggerCollection } from "@furystack/core";
 import { Injectable } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
-import { IRequestAction } from "./Models";
+import { IRequestAction } from "../Models";
 
 @Injectable()
 export class ErrorAction implements IRequestAction {
@@ -13,8 +13,7 @@ export class ErrorAction implements IRequestAction {
         this.serverResponse.writeHead(500, "Server error",
             { "Content-Type": "application/json" },
         );
-        this.serverResponse.write(JSON.stringify({ message: error.message, url: this.incomingMessage.url, stack: error.stack }));
-        this.serverResponse.end();
+        this.serverResponse.end(JSON.stringify({ message: error.message, url: this.incomingMessage.url, stack: error.stack }));
         this.logger.Warning({
             scope: "@furystack/http-api/ErrorAction",
             message: `An action returned 500 from '${this.incomingMessage.url}'.`,

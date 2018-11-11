@@ -1,4 +1,5 @@
 import { Injector } from "@furystack/inject";
+import { usingAsync } from "@sensenet/client-utils";
 import { expect } from "chai";
 import { ServerResponse } from "http";
 import { UserContextService } from "../../src";
@@ -6,14 +7,17 @@ import { GetCurrentUser } from "../../src/Actions/GetCurrentUser";
 
 export const getCurrentUserTests = describe("getCurrentUser", () => {
 
-    it("exec", () => {
+    it("exec", (done: MochaDone) => {
         const testUser = {Name: "Userke"};
-        const i = new Injector({parent: undefined});
-        i.SetInstance({writeHead: () => (undefined), end: (result: string) => {
-            expect(result).to.be.eq(JSON.stringify(testUser));
-        }}, ServerResponse);
-        i.SetInstance({getCurrentUser: async () => (testUser)}, UserContextService);
-        const c = i.GetInstance(GetCurrentUser, true);
-        c.exec();
+        usingAsync(new Injector({parent: undefined}), async (i) => {
+            i.SetInstance({writeHead: () => (undefined), end: (result: string) => {
+                expect(result).to.be.eq(JSON.stringify(testUser));
+                done();
+            }}, ServerResponse);
+            i.SetInstance({getCurrentUser: async () => (testUser)}, UserContextService);
+            await usingAsync(i.GetInstance(GetCurrentUser, true), async (c) => {
+                await c.exec();
+            });
+        });
     });
 });

@@ -1,10 +1,10 @@
 import { Constructable, Injectable } from "@furystack/inject";
 import { IncomingMessage, Server as HttpServer, ServerResponse } from "http";
 import { Server } from "net";
-import { ErrorAction } from "./ErrorAction";
+import { ErrorAction } from "./Actions/ErrorAction";
+import { NotFoundAction } from "./Actions/NotFoundAction";
 import { IRequestAction } from "./Models";
 import { ICorsOptions } from "./Models/ICorsOptions";
-import { NotFoundAction } from "./NotFoundAction";
 export class HttpApiConfiguration {
     constructor(
             public defaultAction: Constructable<IRequestAction>  = NotFoundAction,
