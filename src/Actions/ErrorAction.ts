@@ -6,8 +6,8 @@ import { IRequestAction } from "../Models";
 @Injectable()
 export class ErrorAction implements IRequestAction {
     public dispose() { /** */}
-    public exec(): Promise<void> {
-        throw new Error("Method not implemented.");
+    public async exec(): Promise<void> {
+        throw new Error("Invalid Error action call.");
     }
     public async returnError(error: any): Promise<void> {
         this.serverResponse.writeHead(500, "Server error",
