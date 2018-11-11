@@ -17,6 +17,7 @@ export class HttpApi implements IApi {
             try {
                 injector.SetInstance(incomingMessage);
                 injector.SetInstance(serverResponse);
+                injector.SetInstance(injector);
                 this.utils.addCorsHeaders(this.options.corsOptions, incomingMessage, serverResponse);
                 const actionCtors = this.options.actions.map((a) => a(incomingMessage)).filter((a) => a !== undefined) as Array<Constructable<IRequestAction>>;
                 if (actionCtors.length > 1) {
@@ -27,8 +28,10 @@ export class HttpApi implements IApi {
                             incomingMessage,
                         },
                     });
+                    throw Error(`Multiple HTTP actions found that can be execute the request`);
                 }
                 if (actionCtors.length === 1) {
+                    this.options.PerRequestServices.map((s) => injector.SetInstance(s));
                     const actionCtor = actionCtors[0];
                     await usingAsync(injector.GetInstance(actionCtor, true), async (action) => {
                         await action.exec();
@@ -48,13 +51,19 @@ export class HttpApi implements IApi {
     }
 
     public async activate() {
+        this.server = this.options.serverFactory(this.mainRequestListener.bind(this));
         this.server.listen(this.options.port, this.options.hostName, 8192);
     }
-    public dispose() {
-        this.server.close();
+    public async dispose() {
+        if (this.server !== undefined) {
+            await new Promise((resolve) => {
+                (this.server as Server).on("close", () => resolve());
+                (this.server as Server).close();
+            });
+        }
     }
 
-    public readonly server: Server;
+    public server?: Server;
     private readonly injector: Injector;
 
     constructor(
@@ -63,7 +72,6 @@ export class HttpApi implements IApi {
         private readonly logger: LoggerCollection,
         private readonly utils: Utils,
     ) {
-        this.server = this.options.serverFactory(this.mainRequestListener.bind(this));
         this.injector = new Injector({parent: parentInjector});
     }
 }
