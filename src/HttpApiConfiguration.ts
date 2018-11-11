@@ -5,6 +5,7 @@ import { ErrorAction } from "./Actions/ErrorAction";
 import { NotFoundAction } from "./Actions/NotFoundAction";
 import { IRequestAction } from "./Models";
 import { ICorsOptions } from "./Models/ICorsOptions";
+@Injectable()
 export class HttpApiConfiguration {
     constructor(
             public defaultAction: Constructable<IRequestAction>  = NotFoundAction,

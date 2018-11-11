@@ -3,7 +3,7 @@ import { Constructable, Injectable, Injector } from "@furystack/inject";
 import { usingAsync } from "@sensenet/client-utils";
 import { IncomingMessage, ServerResponse } from "http";
 import { Server } from "net";
-import { HttpApiConfiguration } from "./";
+import { HttpApiConfiguration } from "./HttpApiConfiguration";
 import { IRequestAction } from "./Models";
 import { Utils } from "./Utils";
 
@@ -60,8 +60,8 @@ export class HttpApi implements IApi {
     constructor(
         parentInjector: Injector,
         private readonly options: HttpApiConfiguration,
-        private logger: LoggerCollection,
-        private utils: Utils,
+        private readonly logger: LoggerCollection,
+        private readonly utils: Utils,
     ) {
         this.server = this.options.serverFactory(this.mainRequestListener.bind(this));
         this.injector = new Injector({parent: parentInjector});

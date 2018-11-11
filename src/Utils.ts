@@ -1,6 +1,8 @@
+import { Injectable } from "@furystack/inject";
 import { IncomingMessage, ServerResponse } from "http";
 import { ICorsOptions } from "./Models/ICorsOptions";
 
+@Injectable()
 export class Utils {
     public async readPostBody<T>(incomingMessage: IncomingMessage = this.incomingMessage): Promise<T> {
         let body = "";
