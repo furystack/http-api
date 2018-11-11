@@ -13,37 +13,38 @@ export class HttpApi implements IApi {
     public readonly LogScope = "@furystack/http-api/HttpApi";
 
     public async mainRequestListener(incomingMessage: IncomingMessage, serverResponse: ServerResponse) {
-        await usingAsync(new Injector({parent: this.injector, owner: IncomingMessage}), async (injector) => {
-            try {
-                injector.SetInstance(incomingMessage);
-                injector.SetInstance(serverResponse);
-                injector.SetInstance(injector);
-                this.utils.addCorsHeaders(this.options.corsOptions, incomingMessage, serverResponse);
-                const actionCtors = this.options.actions.map((a) => a(incomingMessage)).filter((a) => a !== undefined) as Array<Constructable<IRequestAction>>;
-                if (actionCtors.length > 1) {
-                    this.logger.Error({
-                        scope: this.LogScope,
-                        message: `Multiple HTTP actions found that can be execute the request`,
-                        data: {
-                            incomingMessage,
-                        },
-                    });
-                    throw Error(`Multiple HTTP actions found that can be execute the request`);
-                }
-                if (actionCtors.length === 1) {
+        await usingAsync(new Injector({ parent: this.injector, owner: IncomingMessage }), async (injector) => {
+            injector.SetInstance(incomingMessage);
+            injector.SetInstance(serverResponse);
+            injector.SetInstance(injector);
+            this.utils.addCorsHeaders(this.options.corsOptions, incomingMessage, serverResponse);
+            const actionCtors = this.options.actions.map((a) => a(incomingMessage)).filter((a) => a !== undefined) as Array<Constructable<IRequestAction>>;
+            if (actionCtors.length > 1) {
+                this.logger.Error({
+                    scope: this.LogScope,
+                    message: `Multiple HTTP actions found that can be execute the request`,
+                    data: {
+                        incomingMessage,
+                    },
+                });
+                throw Error(`Multiple HTTP actions found that can be execute the request`);
+            }
+            if (actionCtors.length === 1) {
+                try {
                     this.options.PerRequestServices.map((s) => injector.SetInstance(s));
                     const actionCtor = actionCtors[0];
                     await usingAsync(injector.GetInstance(actionCtor, true), async (action) => {
                         await action.exec();
                     });
-                } else {
-                    await usingAsync(injector.GetInstance(this.options.notFoundAction), async (a) => {
-                        a.exec();
+                } catch (error) {
+                    await usingAsync(injector.GetInstance(this.options.errorAction), async (e) => {
+                        await e.returnError(error);
                     });
                 }
-            } catch (error) {
-                await usingAsync(injector.GetInstance(this.options.errorAction), async (e) => {
-                    await e.returnError(error);
+
+            } else {
+                await usingAsync(injector.GetInstance(this.options.notFoundAction), async (a) => {
+                    a.exec();
                 });
             }
 
@@ -72,6 +73,6 @@ export class HttpApi implements IApi {
         private readonly logger: LoggerCollection,
         private readonly utils: Utils,
     ) {
-        this.injector = new Injector({parent: parentInjector});
+        this.injector = new Injector({ parent: parentInjector });
     }
 }

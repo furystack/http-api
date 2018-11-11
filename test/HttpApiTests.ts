@@ -123,7 +123,12 @@ export const httpApiTests = describe("HttpApi tests", () => {
             i.SetInstance(new LoggerCollection());
             await usingAsync(i.GetInstance(HttpApi, true), async (api) => {
                 await api.activate();
-                expect(() => api.mainRequestListener({} as any, {} as any)).to.throw();
+                try {
+                    await api.mainRequestListener({} as any, {} as any);
+                    done("Should throw error");
+                } catch (error) {
+                    done();
+                }
             });
         });
     });
