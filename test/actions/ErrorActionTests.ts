@@ -1,12 +1,11 @@
 import { Injector } from "@furystack/inject";
-import { using, usingAsync } from "@sensenet/client-utils";
-import { expect } from "chai";
+import { usingAsync } from "@sensenet/client-utils";
 import { IncomingMessage, ServerResponse } from "http";
 import { ErrorAction } from "../../src";
 
 export const errorActionTests = describe("ErrorAction tests", () => {
-    it("exec", (done: MochaDone) => {
-        usingAsync(new Injector({parent: undefined}), async (i) => {
+    it("exec", (done) => {
+        usingAsync(new Injector({ parent: undefined }), async (i) => {
             i.SetInstance({}, IncomingMessage);
             i.SetInstance({}, ServerResponse);
             await usingAsync(i.GetInstance(ErrorAction, true), async (e) => {
@@ -20,14 +19,16 @@ export const errorActionTests = describe("ErrorAction tests", () => {
         });
     });
 
-    it("returnError", (done: MochaDone) => {
-        const testError = {message: ":("};
-        usingAsync(new Injector({parent: undefined}), async (i) => {
+    it("returnError", (done) => {
+        const testError = { message: ":(" };
+        usingAsync(new Injector({ parent: undefined }), async (i) => {
             i.SetInstance({}, IncomingMessage);
-            i.SetInstance({writeHead: () => (undefined), end: (result: string) => {
-                expect(result).to.be.eq(JSON.stringify(testError));
-                done();
-            }}, ServerResponse);
+            i.SetInstance({
+                writeHead: () => (undefined), end: (result: string) => {
+                    expect(result).toEqual(JSON.stringify(testError));
+                    done();
+                },
+            }, ServerResponse);
             await usingAsync(i.GetInstance(ErrorAction, true), async (c) => {
                 c.returnError(testError);
             });
